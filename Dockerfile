@@ -42,7 +42,7 @@ RUN  wget --quiet "https://release.gitkraken.com/linux/gitkraken-amd64.deb" -O /
   && dpkg -i /tmp/gitkraken-amd64.deb \
   && rm /tmp/gitkraken-amd64.deb
 
-ENTRYPOINT ["/docker-entrypoint.sh"]
+ENTRYPOINT ["/opt/gitkraken/docker-entrypoint.sh"]
 CMD ["/usr/bin/gitkraken"]
 
-COPY docker-entrypoint.sh /
+COPY docker-entrypoint.sh /opt/gitkraken/docker-entrypoint.sh
