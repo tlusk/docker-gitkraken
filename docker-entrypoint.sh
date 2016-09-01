@@ -1,18 +1,31 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-uid=${UID:-1000}
-gid=${GID:-1000}
+USER_NAME=${USER_NAME:-developer}
+DATA_DIR=/opt/gitkraken/data
+CONFIG_DIR=/opt/gitkraken/config
 
-id -u developer > /dev/null 2>&1
+id -u ${USER_NAME} > /dev/null 2>&1
 if [ $? -eq 1 ]; then
-    mkdir -p /home/developer
-    mkdir -p /home/developer/data
-    echo "developer:x:${uid}:${gid}:Developer,,,:/home/developer:/bin/bash" >> /etc/passwd
-    echo "developer:x:${gid}:" >> /etc/group
-    echo "developer ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/developer
-    chmod 0440 /etc/sudoers.d/developer
-    chown ${uid}:${gid} -R /home/developer
+    # Check for unset environment variables
+    if [[ -z ${USER_ID} || -z ${GROUP_ID} ]]; then
+        echo "USER_ID and GROUP_ID environment variables must be set."
+        exit 1
+    fi
+
+    # Create user
+    groupadd -g ${GROUP_ID} ${USER_NAME}
+    useradd -u ${USER_ID} -g ${GROUP_ID} --create-home ${USER_NAME} > /dev/null 2>&1
+    chown ${USER_NAME} /home/${USER_NAME}
+
+    # Create/bind data directory
+    mkdir -p ${DATA_DIR}
+    chown ${USER_NAME} ${DATA_DIR}
+    gosu ${USER_NAME} ln -s ${DATA_DIR} /home/${USER_NAME}/data
+
+    # Create/bind config directory
+    mkdir -p ${CONFIG_DIR}
+    chown ${USER_NAME} ${CONFIG_DIR}
+    gosu ${USER_NAME} ln -s ${CONFIG_DIR} /home/${USER_NAME}/.gitkraken
 fi
 
-su developer -c "$@"
-
+gosu ${USER_NAME} "$@"
