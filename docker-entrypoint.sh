@@ -15,16 +15,16 @@ if [ $? -eq 1 ]; then
     # Create user
     groupadd -g ${GROUP_ID} ${USER_NAME}
     useradd -u ${USER_ID} -g ${GROUP_ID} --create-home ${USER_NAME} > /dev/null 2>&1
-    chown ${USER_NAME} /home/${USER_NAME}
+    chown ${USER_ID}:${GROUP_ID} /home/${USER_NAME}
 
     # Create/bind data directory
     mkdir -p ${DATA_DIR}
-    chown ${USER_NAME} ${DATA_DIR}
+    chown ${USER_ID}:${GROUP_ID} ${DATA_DIR}
     gosu ${USER_NAME} ln -s ${DATA_DIR} /home/${USER_NAME}/data
 
     # Create/bind config directory
     mkdir -p ${CONFIG_DIR}
-    chown ${USER_NAME} ${CONFIG_DIR}
+    chown ${USER_ID}:${GROUP_ID} ${CONFIG_DIR}
     gosu ${USER_NAME} ln -s ${CONFIG_DIR} /home/${USER_NAME}/.gitkraken
 fi
 
