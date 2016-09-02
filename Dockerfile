@@ -1,48 +1,43 @@
-FROM ubuntu:16.04
+FROM centos:7
 
 ENV GOSU_VERSION 1.9
-RUN set -x \
-    && apt-get update && apt-get install -y --no-install-recommends ca-certificates wget && rm -rf /var/lib/apt/lists/* \
-    && dpkgArch="$(dpkg --print-architecture | awk -F- '{ print $NF }')" \
-    && wget -O /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$dpkgArch" \
-    && wget -O /usr/local/bin/gosu.asc "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$dpkgArch.asc" \
-    && export GNUPGHOME="$(mktemp -d)" \
-    && gpg --keyserver ha.pool.sks-keyservers.net --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4 \
-    && gpg --batch --verify /usr/local/bin/gosu.asc /usr/local/bin/gosu \
-    && rm -r "$GNUPGHOME" /usr/local/bin/gosu.asc \
-    && chmod +x /usr/local/bin/gosu \
-    && gosu nobody true \
-    && apt-get purge -y --auto-remove ca-certificates wget
+RUN gpg --keyserver pool.sks-keyservers.net --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4 \
+  && curl -o /usr/local/bin/gosu -SL "https://github.com/tianon/gosu/releases/download/1.9/gosu-amd64" \
+  && curl -o /usr/local/bin/gosu.asc -SL "https://github.com/tianon/gosu/releases/download/1.9/gosu-amd64.asc" \
+  && gpg --verify /usr/local/bin/gosu.asc \
+  && rm /usr/local/bin/gosu.asc \
+  && rm -r /root/.gnupg/ \
+  && chmod +x /usr/local/bin/gosu
 
-COPY keyboard /etc/default/keyboard
-
-RUN  apt-get update -y \
-  && apt-get upgrade -y \
-  && apt-get -f install \
-  && apt-get install -y \
+RUN yum update -y \
+  && yum install -y \
     wget \
-    gconf2 \
-    gconf-service \
-    libgtk2.0-0 \
-    libnotify4 \
-    libxtst6 \
-    libnss3 \
+    dbus-x11 \
+    GConf2 \
+    dconf \
+    dconf-editor \
+    gtk2 \
+    libnotify \
+    libXtst \
+    nss \
     python \
-    gvfs-bin \
+    gvfs \
     xdg-utils \
     firefox \
-    libgnome-keyring0 \
-    libxss1 \
-    libcanberra-gtk-module \
-    libcanberra-gtk3-module \
-    packagekit-gtk3-module \
-    xserver-xorg-video-vmware
+    gnome-keyring \
+    libgnome-keyring \
+    libXScrnSaver \
+    libcanberra-gtk2 \
+    libcanberra-gtk3 \
+    PackageKit-gtk3-module \
+    xorg-x11-drv-vmware
 
-RUN  wget --quiet "https://release.gitkraken.com/linux/gitkraken-amd64.deb" -O /tmp/gitkraken-amd64.deb \
-  && dpkg -i /tmp/gitkraken-amd64.deb \
-  && rm /tmp/gitkraken-amd64.deb
+RUN  wget --quiet "https://release.gitkraken.com/linux/gitkraken-amd64.tar.gz" -O /tmp/gitkraken-amd64.tar.gz \
+  && tar -xf /tmp/gitkraken-amd64.tar.gz -C /opt \
+  && mv /opt/GitKraken /opt/gitkraken \
+  && rm /tmp/gitkraken-amd64.tar.gz
 
 ENTRYPOINT ["/opt/gitkraken/docker-entrypoint.sh"]
-CMD ["/usr/bin/gitkraken"]
+CMD ["/opt/gitkraken/gitkraken"]
 
 COPY docker-entrypoint.sh /opt/gitkraken/docker-entrypoint.sh
